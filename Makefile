@@ -22,7 +22,7 @@ ft: ft.o $(FT_OBJS) $(FT_EXTRA_OBJS)
 	$(CC) $(CFLAGS) -o ft ft.o $(FT_OBJS) $(FT_EXTRA_OBJS) $(LIBS)
 	if test -r codesign.sh; then /bin/sh codesign.sh; fi
 
-$(FT_OBJS): config.mk Makefile json.h
+$(FT_OBJS): Makefile json.h
 
 ft.o: ft.c Makefile 
 
