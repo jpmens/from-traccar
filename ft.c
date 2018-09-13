@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <string.h>
-#include "constfile.h"
 #include "mongoose.h"
 #include "json.h"
 
