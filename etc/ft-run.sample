@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export FT_USER=xxx
+export FT_PASS=yyy
+
+./ft
