@@ -157,7 +157,8 @@ int main(int argc, char **argv)
 	struct mg_connection *c;
 	struct mbuf mb;
 	char *hostname = "127.0.0.1";
-	int run = true, rc, port = 1888;
+	char *ftuser = NULL, *ftpass = NULL;
+	int run = true, rc, port = 1883;
 	int loop_timeout = 1000;
 
 	openlog("from-traccar", LOG_PERROR, LOG_DAEMON);
@@ -176,6 +177,12 @@ int main(int argc, char **argv)
 				      0);	/* exponential backoff */
 
 	mosquitto_disconnect_callback_set(mosq, on_disconnect);
+
+	ftuser = getenv("FT_USER");
+	ftpass = getenv("FT_PASS");
+	if (ftuser || ftpass) {
+		mosquitto_username_pw_set(mosq, ftuser, ftpass);
+	}
 
 	rc = mosquitto_connect(mosq, hostname, port, 60);
 	if (rc) {

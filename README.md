@@ -4,6 +4,13 @@ _ft_ is _from Traccar_. It listens on the loopback interface and obtains positio
 
 The topic branch is contructed from the device _uniqueId_ and `position` or `event/<eventType>`
 
+## usage
+
+```bash
+export FT_USER=mqttusername
+export FT_PASS=mqttpass
+```
+
 
 ## topics
 
