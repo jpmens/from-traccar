@@ -7,3 +7,5 @@
 *.so.*
 *.dylib
 *.dSYM/
+ft
+ft-run.sh
