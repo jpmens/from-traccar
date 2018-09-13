@@ -2,6 +2,8 @@
 
 _ft_ is _from Traccar_. It listens on the loopback interface and obtains positions and events from Traccar via HTTP POST, extracts the JSON payload from the body, and publishes it via MQTT.
 
+![flow](flow.png)
+
 The topic branch is contructed from the device _uniqueId_ and `position` or `event/<eventType>`
 
 ## usage
