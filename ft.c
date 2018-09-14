@@ -45,9 +45,11 @@ void on_disconnect(struct mosquitto *mosq, void *userdata, int reason)
 	}
 }
 
-void putj(const char *json_string)
+void publish(const char *json_string)
 {
+#ifdef DEBUG
 	FILE *fp = fopen("/tmp/ft.json", "a");
+#endif
 	char *s, *uniqueid = NULL, *event = NULL;
 	char *type = "position";
 	JsonNode *d, *e, *j;
@@ -94,7 +96,7 @@ void putj(const char *json_string)
 	mbuf_append(&mtopic, "\0", 1);
 	// printf("%s\n", mtopic.buf);
 
-
+#if DEBUG
 	if ((s = json_stringify(json, "  ")) != NULL) {
 		//puts(s);
 		if (fp != NULL) {
@@ -103,6 +105,8 @@ void putj(const char *json_string)
 		}
 		free(s);
 	}
+#endif /* DEBUG */
+
 	/*
 	 * Stringify the JSON instead of relying on what we get from Traccar
 	 * ... Experience shows that upstream often changes stuff, and I
@@ -142,7 +146,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 			//hm->body.p[hm->body.len] = 0;
 			//printf("BODY: [%.*s]\n", (int)hm->body.len, hm->body.p);
 
-			putj(mb->buf);
+			publish(mb->buf);
 
 			res = "OK";
 			mg_send_head(c, 200, strlen(res), "Content-Type: text/plain");
