@@ -14,7 +14,8 @@
 
 static const char *s_http_port = "127.0.0.1:8840";
 
-#define PREFIX "_traccar/"
+#define TOPIC_BRANCH	"_traccar/"
+#define PREFIX		"owntracks/qtripp/"	/* strip this to get uniqueId */
 struct mbuf mtopic;
 struct mosquitto *mosq;
 
@@ -52,7 +53,7 @@ void putj(const char *json_string)
 	JsonNode *d, *e, *j;
 
 	mtopic.len = 0;
-	mbuf_append(&mtopic, PREFIX, strlen(PREFIX));
+	mbuf_append(&mtopic, TOPIC_BRANCH, strlen(TOPIC_BRANCH));
 
 	JsonNode *json;
 	if ((json = json_decode(json_string)) == NULL) {
@@ -68,6 +69,9 @@ void putj(const char *json_string)
 		}
 	}
 	uniqueid = (uniqueid) ? uniqueid : "<unknown>";
+	if (strncmp(uniqueid, PREFIX, strlen(PREFIX)) == 0) {
+		uniqueid = uniqueid + strlen(PREFIX);
+	}
 	mbuf_append(&mtopic, uniqueid, strlen(uniqueid));
 	mbuf_append(&mtopic, "/", 1);
 
@@ -88,7 +92,7 @@ void putj(const char *json_string)
 	}
 
 	mbuf_append(&mtopic, "\0", 1);
-	printf("%s\n", mtopic.buf);
+	// printf("%s\n", mtopic.buf);
 
 
 	if ((s = json_stringify(json, "  ")) != NULL) {
@@ -108,6 +112,7 @@ void putj(const char *json_string)
 	if ((s = json_stringify(json, NULL)) != NULL) {
 		mosquitto_publish(mosq, NULL, mtopic.buf,
 				 strlen(s), s, 1, false);
+		free(s);
 	}
 	json_delete(json);
 }
