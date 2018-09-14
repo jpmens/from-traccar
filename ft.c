@@ -44,7 +44,7 @@ void on_disconnect(struct mosquitto *mosq, void *userdata, int reason)
 	}
 }
 
-void putj(const char *b)
+void putj(const char *json_string)
 {
 	FILE *fp = fopen("/tmp/ft.json", "a");
 	char *s, *uniqueid = NULL, *event = NULL;
@@ -55,9 +55,9 @@ void putj(const char *b)
 	mbuf_append(&mtopic, PREFIX, strlen(PREFIX));
 
 	JsonNode *json;
-	if ((json = json_decode(b)) == NULL) {
+	if ((json = json_decode(json_string)) == NULL) {
 		puts("meh");
-		puts(b);
+		puts(json_string);
 		return;
 	}
 	if ((d = json_find_member(json, "device")) != NULL) {
