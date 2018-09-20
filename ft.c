@@ -151,11 +151,16 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 			res = "OK";
 			mg_send_head(c, 200, strlen(res), "Content-Type: text/plain");
 			mg_printf(c, "%s", res);
+			// mg_printf_http_chunk(c, "%s", res);
+			// mg_send_http_chunk(c, "", 0); // Tell the client we're finished
+			// c->flags |= MG_F_SEND_AND_CLOSE;
+
 		} else {
 			char *res = "go away";
 
 			mg_send_head(c, 404, strlen(res), "Content-Type: text/plain");
 			mg_printf(c, "%s", res);
+			c->flags |= MG_F_SEND_AND_CLOSE;
 		}
 	}
 }
@@ -168,7 +173,7 @@ int main(int argc, char **argv)
 	char *hostname = "127.0.0.1";
 	char *ftuser = NULL, *ftpass = NULL;
 	int run = true, rc, port = 1883;
-	int loop_timeout = 1000;
+	int loop_timeout = 10;
 
 	openlog("from-traccar", LOG_PERROR, LOG_DAEMON);
 
@@ -205,18 +210,22 @@ int main(int argc, char **argv)
 			  rc, mosquitto_strerror(rc), mosquitto_reason(rc));
 		}
 		mosquitto_lib_cleanup();
-		return rc;
+		return (rc);
 	}
 	mbuf_init(&mb, 2048);
 	mg_mgr_init(&mgr, &mb);
 
 	c = mg_bind(&mgr, s_http_port, ev_handler);
+	if (c == NULL) {
+		perror("cannot bind http manager");
+		exit(2);
+	}
 	mg_set_protocol_http_websocket(c);
 
 	mbuf_init(&mtopic, 2048);
 
 	while (run) {
-		mg_mgr_poll(&mgr, 1000);
+		mg_mgr_poll(&mgr, 9000);
 
 		rc = mosquitto_loop(mosq, loop_timeout, /* max-packets */ 1);
 		if (run && rc) {
