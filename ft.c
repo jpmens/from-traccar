@@ -7,6 +7,8 @@
 #include "mongoose.h"
 #include "json.h"
 
+// #define DEBUG 1
+
 /*
  * ft := from Traccar Traccar posts positions and events. We extract the JSON
  * from the body and publish it via MQTT.
@@ -52,12 +54,11 @@ void publish(const char *json_string)
 #endif
 	char *s, *uniqueid = NULL, *event = NULL;
 	char *type = "position";
-	JsonNode *d, *e, *j;
+	JsonNode *d, *e, *j, *json;
 
 	mtopic.len = 0;
 	mbuf_append(&mtopic, TOPIC_BRANCH, strlen(TOPIC_BRANCH));
 
-	JsonNode *json;
 	if ((json = json_decode(json_string)) == NULL) {
 		puts("meh");
 		puts(json_string);
@@ -94,7 +95,7 @@ void publish(const char *json_string)
 	}
 
 	mbuf_append(&mtopic, "\0", 1);
-	// printf("%s\n", mtopic.buf);
+	fprintf(stderr, "%s\n", mtopic.buf);
 
 #if DEBUG
 	if ((s = json_stringify(json, "  ")) != NULL) {
@@ -150,10 +151,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 
 			res = "OK";
 			mg_send_head(c, 200, strlen(res), "Content-Type: text/plain");
-			mg_printf(c, "%s", res);
-			// mg_printf_http_chunk(c, "%s", res);
-			// mg_send_http_chunk(c, "", 0); // Tell the client we're finished
-			// c->flags |= MG_F_SEND_AND_CLOSE;
+			// mg_printf(c, "%s", res);
+			mg_printf_http_chunk(c, "%s", res);
+			mg_send_http_chunk(c, "", 0); // Tell the client we're finished
+			c->flags |= MG_F_SEND_AND_CLOSE;
 
 		} else {
 			char *res = "go away";
