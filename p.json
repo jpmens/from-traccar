@@ -1,0 +1,49 @@
+{
+	"position": {
+		"id": 18322,
+		"attributes": {
+			"t": "I",
+			"ignition": false,
+			"distance": 449672.22,
+			"totalDistance": 29561830.63,
+			"motion": false,
+			"hours": 55000
+		},
+		"deviceId": 7,
+		"type": null,
+		"protocol": "owntracks",
+		"serverTime": null,
+		"deviceTime": "2018-09-14T10:18:32.000+0000",
+		"fixTime": "2018-09-14T10:18:32.000+0000",
+		"outdated": false,
+		"valid": true,
+		"latitude": 48.83875,
+		"longitude": 2.25353,
+		"altitude": 0,
+		"speed": 0,
+		"course": 0,
+		"address": null,
+		"accuracy": 0,
+		"network": null
+	},
+	"device": {
+		"id": 7,
+		"attributes": {
+			"aaa": "AAAA",
+			"bbb": "BBBB",
+			"ccc": "CCCC"
+		},
+		"groupId": 0,
+		"name": "Demo-54",
+		"uniqueId": "q54",
+		"status": "online",
+		"lastUpdate": "2018-09-14T10:18:32.285+0000",
+		"positionId": 18321,
+		"geofenceIds": [],
+		"phone": "0171",
+		"model": "dkdkk",
+		"contact": "contcact",
+		"category": "boat",
+		"disabled": false
+	}
+}
