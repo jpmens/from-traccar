@@ -126,7 +126,6 @@ void publish(const char *json_string)
 static void ev_handler(struct mg_connection *c, int ev, void *p)
 {
 	struct mbuf *mb = (struct mbuf *)c->mgr->user_data;
-	char *res;
 
 
 	if (ev == MG_EV_HTTP_REQUEST) {
@@ -149,12 +148,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 
 			publish(mb->buf);
 
-			res = "OK";
-			mg_send_head(c, 200, strlen(res), "Content-Type: text/plain");
-			// mg_printf(c, "%s", res);
-			mg_printf_http_chunk(c, "%s", res);
-			mg_send_http_chunk(c, "", 0); // Tell the client we're finished
-			c->flags |= MG_F_SEND_AND_CLOSE;
+			mg_send_head(c, 200, 0, "Content-Type: text/plain\nConnection: keep-alive");
+			// mg_printf_http_chunk(c, "%s", res);
+			// mg_send_http_chunk(c, "", 0); // Tell the client we're finished
+			// c->flags |= MG_F_SEND_AND_CLOSE;
 
 		} else {
 			char *res = "go away";
