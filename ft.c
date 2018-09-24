@@ -202,7 +202,7 @@ static int send_page(struct MHD_Connection *connection, const char *page, int st
 	return (ret);
 }
 
-int answer_to_connection(void *cls, struct MHD_Connection *connection,
+int handle_connection(void *cls, struct MHD_Connection *connection,
 	const char *url,
 	const char *method, const char *version,
 	const char *upload_data,
@@ -240,8 +240,7 @@ int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		}
 
 		fprintf(stderr, "Client %s: %s %s %s\n", ip, method, url, version);
-		MHD_get_connection_values(connection, MHD_HEADER_KIND, &print_kv, NULL);
-
+		// MHD_get_connection_values(connection, MHD_HEADER_KIND, &print_kv, NULL);
 
 		if ((con_info = malloc(sizeof (struct connection_info_struct))) == NULL) {
 			return (MHD_NO);
@@ -271,7 +270,8 @@ int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	 * data is now complete; we can process the data.
 	 */
 
-	fprintf(stderr, "++++++ Here we are with a total of: %zu bytes\n\n", con_info->size);
+	// fprintf(stderr, "++++++ Here we are with a total of: %zu bytes\n\n", con_info->size);
+
 	statsd_inc(sd, "requests.incoming", SAMPLE_RATE);
 	statsd_gauge(sd, "requests.incoming.size", con_info->size);
 
@@ -351,7 +351,7 @@ int main(int argc, char **argv)
 	sd = statsd_init_with_namespace(STATSDHOST, 8125, "fromtraccar");
 
 	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, on_client_connect, NULL,
-		&answer_to_connection, NULL,
+		&handle_connection, NULL,
 		MHD_OPTION_NOTIFY_COMPLETED, &request_completed, NULL,
 		MHD_OPTION_SOCK_ADDR, &sad,
 		MHD_OPTION_END);
