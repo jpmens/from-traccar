@@ -1,7 +1,16 @@
 # include config.mk
 
-CFLAGS	+=-Wall -Werror
-LIBS	= $(MORELIBS) -lm -L. -lmosquitto
+# StatsD host is not optional
+STATSDHOST="127.0.0.1"
+
+CFLAGS= -Wall -Werror
+LDFLAGS	= $(MORELIBS) -lm -L. -lmosquitto
+
+ifneq ($(origin STATSDHOST), undefined)
+	CFLAGS += -DSTATSDHOST=\"$(STATSDHOST)\"
+	LDFLAGS += -lstatsdclient
+endif
+
 
 TARGETS=
 FT_OBJS = json.o mongoose.o 
@@ -19,7 +28,7 @@ CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 all: $(TARGETS)
 
 ft: ft.o $(FT_OBJS) $(FT_EXTRA_OBJS)
-	$(CC) $(CFLAGS) -o ft ft.o $(FT_OBJS) $(FT_EXTRA_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -o ft ft.o $(FT_OBJS) $(FT_EXTRA_OBJS) $(LDFLAGS)
 	if test -r codesign.sh; then /bin/sh codesign.sh; fi
 
 $(FT_OBJS): Makefile json.h

@@ -6,6 +6,11 @@
 #include <string.h>
 #include "mongoose.h"
 #include "json.h"
+#include <statsd/statsd-client.h>
+
+#define SAMPLE_RATE	1.0
+
+statsd_link *sd;
 
 // #define DEBUG 1
 
@@ -53,7 +58,7 @@ void publish(const char *json_string)
 	FILE *fp = fopen("/tmp/ft.json", "a");
 #endif
 	char *s, *uniqueid = NULL, *event = NULL;
-	char *type = "position";
+	char *type = "position", s_type[128];
 	JsonNode *d, *e, *j, *json;
 
 	mtopic.len = 0;
@@ -62,6 +67,7 @@ void publish(const char *json_string)
 	if ((json = json_decode(json_string)) == NULL) {
 		puts("meh");
 		puts(json_string);
+		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
 		return;
 	}
 	if ((d = json_find_member(json, "device")) != NULL) {
@@ -88,10 +94,16 @@ void publish(const char *json_string)
 		}
 	}
 
+	snprintf(s_type, sizeof(s_type), "requests.%s", type);
+	statsd_inc(sd, s_type, SAMPLE_RATE);
+
 	mbuf_append(&mtopic, type, strlen(type));
 	if (event) {
 		mbuf_append(&mtopic, "/", 1);
 		mbuf_append(&mtopic, event, strlen(event));
+
+		snprintf(s_type, sizeof(s_type), "event.%s", event);
+		statsd_inc(sd, s_type, SAMPLE_RATE);
 	}
 
 	mbuf_append(&mtopic, "\0", 1);
@@ -118,6 +130,7 @@ void publish(const char *json_string)
 		mosquitto_publish(mosq, NULL, mtopic.buf,
 				 strlen(s), s, 1, false);
 		free(s);
+		statsd_inc(sd, "requests.tomqtt", SAMPLE_RATE);
 	}
 	json_delete(json);
 }
@@ -137,6 +150,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 
 		if (mg_vcmp(&hm->uri, "/evpos") == 0) {
 
+			statsd_inc(sd, "requests.incoming", SAMPLE_RATE);
+
 			/*
 			 * We've received an HTTP request from Traccar with a
 			 * position or en event in it. Grab the JSON from the
@@ -145,6 +160,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *p)
 
 			//hm->body.p[hm->body.len] = 0;
 			//printf("BODY: [%.*s]\n", (int)hm->body.len, hm->body.p);
+			fprintf(stderr, "BODY len: %d\n", (int)hm->body.len);
 
 			publish(mb->buf);
 
@@ -222,8 +238,10 @@ int main(int argc, char **argv)
 
 	mbuf_init(&mtopic, 2048);
 
+	sd = statsd_init_with_namespace(STATSDHOST, 8125, "fromtraccar");
+
 	while (run) {
-		mg_mgr_poll(&mgr, 9000);
+		mg_mgr_poll(&mgr, 99000);
 
 		rc = mosquitto_loop(mosq, loop_timeout, /* max-packets */ 1);
 		if (run && rc) {
@@ -235,6 +253,7 @@ int main(int argc, char **argv)
 		}
 	}
 	mg_mgr_free(&mgr);
+	statsd_finalize(sd);
 
 	return 0;
 }
