@@ -83,6 +83,7 @@ void publish(const char *json_string)
 		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
 		return;
 	}
+
 	if ((d = json_find_member(json, "device")) != NULL) {
 		if ((j = json_find_member(d, "uniqueId")) != NULL) {
 			if (j->tag == JSON_STRING) {
@@ -90,6 +91,13 @@ void publish(const char *json_string)
 			}
 		}
 	}
+
+	if (uniqueid == NULL || json_find_member(json, "position") == NULL) {
+		fprintf(stderr, "No uniqueid; is this a Traccar payload?\n");
+		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
+		return;
+	}
+
 	uniqueid = (uniqueid) ? uniqueid : "<unknown>";
 	if (strncmp(uniqueid, PREFIX, strlen(PREFIX)) == 0) {
 		uniqueid = uniqueid + strlen(PREFIX);
