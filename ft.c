@@ -160,6 +160,11 @@ void request_completed(void *cls, struct MHD_Connection *connection,
 {
 	struct connection_info_struct *con_info = *con_cls;
 
+	if (!con_cls || !*con_cls) {
+		/* For example on a POST to an incorrect URL */
+		return;
+	}
+
 	if (con_info->ds)
 		utstring_free(con_info->ds);
 
