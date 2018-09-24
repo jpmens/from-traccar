@@ -95,6 +95,7 @@ void publish(const char *json_string)
 	if (uniqueid == NULL || json_find_member(json, "position") == NULL) {
 		fprintf(stderr, "No uniqueid; is this a Traccar payload?\n");
 		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
+		json_delete(json);
 		return;
 	}
 
