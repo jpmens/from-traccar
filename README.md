@@ -11,6 +11,19 @@ The topic branch is contructed from the device _uniqueId_ and `position` or `eve
 ```bash
 export FT_USER=mqttusername
 export FT_PASS=mqttpass
+export FT_IP=127.0.0.1 #default
+export FT_PORT=8840 #default
+```
+
+### metrics
+
+```
+fromtraccar.requests.incoming:1|c		counter for incoming HTTP requests total
+fromtraccar.requests.incoming.size:1202|g	size of incoming payload
+fromtraccar.requests.position:1|c		counter if request is a position query
+fromtraccar.requests.event:1|c			counter if request is an event query
+fromtraccar.event.ignitionOff:1|c		counter for type of event
+fromtraccar.requests.tomqtt:1|c			counter for sent off to MQTT
 ```
 
 
@@ -235,3 +248,36 @@ _traccar/q54/event/ignitionOff
 	]
 }
 ```
+
+## before / after
+
+### before
+
+```
+< HTTP/1.1 200 OK
+< Server: Mongoose/6.12
+< Content-Type: text/plain
+< Connection: keep-alive
+< Content-Length: 0
+<
+* Connection #0 to host 127.0.0.1 left intact
+```
+
+### after
+
+```
+< HTTP/1.1 200 OK
+< Connection: Keep-Alive
+< Content-Length: 0
+< Content-Type: text/plain
+< Date: Mon, 24 Sep 2018 07:03:10 GMT
+<
+* Connection #0 to host 127.0.0.1 left intact
+```
+
+## requirements
+
+* [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/)
+* [statsd-c-client](https://github.com/romanbsd/statsd-c-client)
+* [utstring](https://troydhanson.github.io/uthash/utstring.html)
+

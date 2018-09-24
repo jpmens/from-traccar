@@ -4,7 +4,7 @@
 STATSDHOST="127.0.0.1"
 
 CFLAGS= -Wall -Werror
-LDFLAGS	= $(MORELIBS) -lm -L. -lmosquitto
+LDFLAGS	= $(MORELIBS) -lm -L. -lmosquitto -lmicrohttpd
 
 ifneq ($(origin STATSDHOST), undefined)
 	CFLAGS += -DSTATSDHOST=\"$(STATSDHOST)\"
@@ -13,7 +13,7 @@ endif
 
 
 TARGETS=
-FT_OBJS = json.o mongoose.o 
+FT_OBJS = json.o
 FT_EXTRA_OBJS = 
 
 ifneq ($(FREEBSD),yes)
@@ -31,7 +31,7 @@ ft: ft.o $(FT_OBJS) $(FT_EXTRA_OBJS)
 	$(CC) $(CFLAGS) -o ft ft.o $(FT_OBJS) $(FT_EXTRA_OBJS) $(LDFLAGS)
 	if test -r codesign.sh; then /bin/sh codesign.sh; fi
 
-$(FT_OBJS): Makefile json.h
+$(FT_OBJS): Makefile json.h utstring.h
 
 ft.o: ft.c Makefile 
 
