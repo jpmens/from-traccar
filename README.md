@@ -11,8 +11,10 @@ The topic branch is contructed from the device _uniqueId_ and `position` or `eve
 ```bash
 export FT_USER=mqttusername
 export FT_PASS=mqttpass
-export FT_IP=127.0.0.1 #default
-export FT_PORT=8840 #default
+export FT_IP=127.0.0.1 #default  Bind address
+export FT_PORT=8840 #default     Bind port
+export FT_MQTT_HOST=127.0.0.1 #default
+export FT_MQTT_PORT=1883 #default
 ```
 
 ### metrics
@@ -24,6 +26,23 @@ fromtraccar.requests.position:1|c		counter if request is a position query
 fromtraccar.requests.event:1|c			counter if request is an event query
 fromtraccar.event.ignitionOff:1|c		counter for type of event
 fromtraccar.requests.tomqtt:1|c			counter for sent off to MQTT
+```
+
+### stats
+
+```
+curl http://localhost:8840/stats
+{
+  "stats": {
+    "_whoami": "ft.c",
+    "_tst": 1537983139,
+    "stats": 5,
+    "requests": 64,
+    "positions": 58,
+    "events": 6
+  },
+  "uptime": 1426
+}
 ```
 
 

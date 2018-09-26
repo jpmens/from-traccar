@@ -359,7 +359,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in sad;
 	char *s_ip, *s_port;
 	unsigned short port;
-	char *hostname = "127.0.0.1";
+	char *mqtt_hostname, *mqtt_sport;
 	char *ftuser = NULL, *ftpass = NULL;
 	int run = true, rc, mqtt_port = 1883;
 	int loop_timeout = 5000;
@@ -368,6 +368,12 @@ int main(int argc, char **argv)
 		s_ip = "127.0.0.1";
 	if ((s_port = getenv("FT_PORT")) == NULL)
 		s_port = S_PORT;
+
+	if ((mqtt_hostname = getenv("FT_MQTT_HOST")) == NULL)
+		mqtt_hostname = "127.0.0.1";
+	if ((mqtt_sport = getenv("FT_MQTT_PORT")) == NULL)
+		mqtt_sport = "1883";
+	mqtt_port = atoi(mqtt_sport);
 
 	port = atoi(s_port);
 
@@ -403,7 +409,8 @@ int main(int argc, char **argv)
 		mosquitto_username_pw_set(mosq, ftuser, ftpass);
 	}
 
-	rc = mosquitto_connect(mosq, hostname, mqtt_port, 60);
+	printf("%s, %d\n", mqtt_hostname, mqtt_port);
+	rc = mosquitto_connect(mosq, mqtt_hostname, mqtt_port, 60);
 	if (rc) {
 		char err[1024];
 
