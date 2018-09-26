@@ -31,7 +31,7 @@ struct connection_info_struct {
 #define SAMPLE_RATE	1.0
 statsd_link *sd;
 
-// #define DEBUG 1
+#define DEBUG 1
 
 #define TOPIC_BRANCH	"_traccar/"
 #define PREFIX		"owntracks/qtripp/"	/* strip this to get uniqueId */
@@ -92,9 +92,16 @@ void publish(const char *json_string)
 		}
 	}
 
-	if (uniqueid == NULL || json_find_member(json, "position") == NULL) {
-		fprintf(stderr, "No uniqueid; is this a Traccar payload?\n");
-		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
+	if ( (json_find_member(json, "position") == NULL) &&
+		(json_find_member(json, "event") == NULL) )
+	{
+		syslog(LOG_INFO, "Neither position nor event; is this a Traccar payload?");
+		json_delete(json);
+		return;
+	}
+
+	if (uniqueid == NULL) {
+		syslog(LOG_INFO, "No uniqueid; is this a Traccar payload?");
 		json_delete(json);
 		return;
 	}
@@ -245,7 +252,7 @@ int handle_connection(void *cls, struct MHD_Connection *connection,
 		}
 
 		fprintf(stderr, "Client %s: %s %s %s\n", ip, method, url, version);
-		// MHD_get_connection_values(connection, MHD_HEADER_KIND, &print_kv, NULL);
+		MHD_get_connection_values(connection, MHD_HEADER_KIND, &print_kv, NULL);
 
 		if ((con_info = malloc(sizeof (struct connection_info_struct))) == NULL) {
 			return (MHD_NO);
@@ -275,7 +282,8 @@ int handle_connection(void *cls, struct MHD_Connection *connection,
 	 * data is now complete; we can process the data.
 	 */
 
-	// fprintf(stderr, "++++++ Here we are with a total of: %zu bytes\n\n", con_info->size);
+	fprintf(stderr, "++++++ Here we are with a total of: %zu bytes\n\n", con_info->size);
+	fprintf(stderr, "++++++ %s\n\n", utstring_body(con_info->ds));
 
 	statsd_inc(sd, "requests.incoming", SAMPLE_RATE);
 	statsd_gauge(sd, "requests.incoming.size", con_info->size);
