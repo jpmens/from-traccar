@@ -13,6 +13,7 @@
 #include <microhttpd.h>
 #include "utstring.h"
 #include <time.h>
+#include <assert.h>
 #include "json.h"
 #include <statsd/statsd-client.h>
 
@@ -93,6 +94,8 @@ static int get_stats(struct MHD_Connection *connection)
 	JsonNode *json = json_mkobject(), *counters = json_mkobject();
 	char *js;
 
+	assert(json && counters);
+
 	json_append_member(counters, "_whoami",		json_mkstring(__FILE__));
 	json_append_member(counters, "_tst",		json_mknumber(time(0)));
 	json_append_member(counters, "stats",		json_mknumber(++st.stats));
@@ -127,6 +130,7 @@ void publish(const char *json_string)
 	char *type = "position", s_type[128];
 	JsonNode *d, *e, *j, *json;
 	static UT_string *mtopic;
+	int rc;
 
 	utstring_renew(mtopic);
 
@@ -213,7 +217,7 @@ void publish(const char *json_string)
 	 */
 
 	if ((s = json_stringify(json, NULL)) != NULL) {
-		mosquitto_publish(mosq, NULL, utstring_body(mtopic),
+		rc = mosquitto_publish(mosq, NULL, utstring_body(mtopic),
 				 strlen(s), s, 1, false);
 		free(s);
 		statsd_inc(sd, "requests.tomqtt", SAMPLE_RATE);
@@ -409,7 +413,6 @@ int main(int argc, char **argv)
 		mosquitto_username_pw_set(mosq, ftuser, ftpass);
 	}
 
-	printf("%s, %d\n", mqtt_hostname, mqtt_port);
 	rc = mosquitto_connect(mosq, mqtt_hostname, mqtt_port, 60);
 	if (rc) {
 		char err[1024];
