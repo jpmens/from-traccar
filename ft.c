@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <microhttpd.h>
 #include "utstring.h"
+#include <time.h>
 #include "json.h"
 #include <statsd/statsd-client.h>
 
@@ -27,6 +28,14 @@ struct connection_info_struct {
 	UT_string *ds;
 	size_t size;
 };
+
+static struct statistics {
+	time_t launchtime;
+	unsigned long requests;
+	unsigned long positions;
+	unsigned long events;
+	unsigned long stats;
+} st;
 
 #define SAMPLE_RATE	1.0
 statsd_link *sd;
@@ -63,6 +72,52 @@ void on_disconnect(struct mosquitto *mosq, void *userdata, int reason)
 	}
 }
 
+static int send_content(struct MHD_Connection *conn, const char *page,
+		const char *content_type, int status_code)
+{
+	int ret;
+	struct MHD_Response *response;
+
+	response = MHD_create_response_from_buffer(strlen(page),
+				(void*) page, MHD_RESPMEM_MUST_COPY);
+	if (!response)
+		return (MHD_NO);
+	MHD_add_response_header(response, "Content-Type", content_type);
+	ret = MHD_queue_response(conn, status_code, response);
+	MHD_destroy_response(response);
+	return (ret);
+}
+
+static int get_stats(struct MHD_Connection *connection)
+{
+	JsonNode *json = json_mkobject(), *counters = json_mkobject();
+	char *js;
+
+	json_append_member(counters, "_whoami",		json_mkstring(__FILE__));
+	json_append_member(counters, "_tst",		json_mknumber(time(0)));
+	json_append_member(counters, "stats",		json_mknumber(++st.stats));
+	json_append_member(counters, "requests",	json_mknumber(st.requests));
+	json_append_member(counters, "positions",	json_mknumber(st.positions));
+	json_append_member(counters, "events",		json_mknumber(st.events));
+
+	json_append_member(json, "stats", counters);
+	json_append_member(json, "uptime", json_mknumber(time(0) - st.launchtime));
+
+	if ((js = json_stringify(json, NULL)) != NULL) {
+		int ret = send_content(connection, js, "application/json", MHD_HTTP_OK);
+		free(js);
+		json_delete(json);
+		return (ret);
+	}
+
+	json_delete(json);
+
+	return send_content(connection, "{}", "application/json", MHD_HTTP_OK);
+
+}
+
+
+
 void publish(const char *json_string)
 {
 #ifdef DEBUG
@@ -76,6 +131,8 @@ void publish(const char *json_string)
 	utstring_renew(mtopic);
 
 	utstring_printf(mtopic, "%s", TOPIC_BRANCH);
+
+	st.requests++;
 
 	if ((json = json_decode(json_string)) == NULL) {
 		puts("meh");
@@ -117,6 +174,7 @@ void publish(const char *json_string)
 			if (j->tag == JSON_STRING) {
 				type = "event";
 				event = j->string_;
+
 			}
 		}
 	}
@@ -129,7 +187,10 @@ void publish(const char *json_string)
 		utstring_printf(mtopic, "/%s", event);
 
 		snprintf(s_type, sizeof(s_type), "event.%s", event);
+		st.events++;
 		statsd_inc(sd, s_type, SAMPLE_RATE);
+	} else {
+		st.positions++;
 	}
 
 	fprintf(stderr, "%s\n", utstring_body(mtopic));
@@ -202,16 +263,7 @@ int print_kv(void *cls, enum MHD_ValueKind kind, const char *key, const char *va
 
 static int send_page(struct MHD_Connection *connection, const char *page, int status_code)
 {
-	int ret;
-	struct MHD_Response *response;
-
-	response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_MUST_COPY);
-	if (!response)
-		return (MHD_NO);
-	MHD_add_response_header(response, "Content-Type", "text/plain");
-	ret = MHD_queue_response(connection, status_code, response);
-	MHD_destroy_response(response);
-	return (ret);
+	return send_content(connection, page, "text/plain", status_code);
 }
 
 int handle_connection(void *cls, struct MHD_Connection *connection,
@@ -221,6 +273,10 @@ int handle_connection(void *cls, struct MHD_Connection *connection,
 	size_t *upload_data_size, void **con_cls)
 {
 	struct connection_info_struct *con_info = (struct connection_info_struct *)*con_cls;
+
+	if ((strcmp(method, "GET") == 0) && (strcmp(url, "/stats") == 0)) {
+		return get_stats(connection);
+	}
 
 	if (strcmp(method, "POST") != 0) {
 		return (send_page(connection, "Go away!", MHD_HTTP_METHOD_NOT_ALLOWED));
@@ -324,6 +380,7 @@ int main(int argc, char **argv)
 	}
 
 	openlog("from-traccar", LOG_PERROR, LOG_DAEMON);
+	st.launchtime = time(0);
 
 	mosquitto_lib_init();
 
