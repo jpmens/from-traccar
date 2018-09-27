@@ -41,7 +41,7 @@ static struct statistics {
 #define SAMPLE_RATE	1.0
 statsd_link *sd;
 
-#define DEBUG 1
+// #define DEBUG 1
 
 #define TOPIC_BRANCH	"_traccar/"
 #define PREFIX		"owntracks/qtripp/"	/* strip this to get uniqueId */
