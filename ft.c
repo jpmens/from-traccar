@@ -130,7 +130,6 @@ void publish(const char *json_string)
 	char *type = "position", s_type[128];
 	JsonNode *d, *e, *j, *json;
 	static UT_string *mtopic;
-	int rc;
 
 	utstring_renew(mtopic);
 
@@ -217,7 +216,7 @@ void publish(const char *json_string)
 	 */
 
 	if ((s = json_stringify(json, NULL)) != NULL) {
-		rc = mosquitto_publish(mosq, NULL, utstring_body(mtopic),
+		mosquitto_publish(mosq, NULL, utstring_body(mtopic),
 				 strlen(s), s, 1, false);
 		free(s);
 		statsd_inc(sd, "requests.tomqtt", SAMPLE_RATE);
