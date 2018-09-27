@@ -97,14 +97,14 @@ static int get_stats(struct MHD_Connection *connection)
 	assert(json && counters);
 
 	json_append_member(counters, "_whoami",		json_mkstring(__FILE__));
-	json_append_member(counters, "_tst",		json_mknumber(time(0)));
 	json_append_member(counters, "stats",		json_mknumber(++st.stats));
 	json_append_member(counters, "requests",	json_mknumber(st.requests));
 	json_append_member(counters, "positions",	json_mknumber(st.positions));
 	json_append_member(counters, "events",		json_mknumber(st.events));
 
-	json_append_member(json, "stats", counters);
-	json_append_member(json, "uptime", json_mknumber(time(0) - st.launchtime));
+	json_append_member(json, "stats",	counters);
+	json_append_member(json, "uptime",	json_mknumber(time(0) - st.launchtime));
+	json_append_member(json, "tst",		json_mknumber(time(0)));
 
 	if ((js = json_stringify(json, NULL)) != NULL) {
 		int ret = send_content(connection, js, "application/json", MHD_HTTP_OK);
