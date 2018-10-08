@@ -89,10 +89,23 @@ static int send_content(struct MHD_Connection *conn, const char *page,
 	return (ret);
 }
 
+
+void uptime(time_t seconds, char *dest, size_t destlen)
+{
+	int days, hours, mins;
+
+	days = seconds / 86400;
+	hours = (seconds / 3600) - (days * 24);
+	mins = (seconds / 60) - (days * 24 * 60) - (hours * 60);
+
+	snprintf(dest, destlen, "%d days, %d:%02d", days, hours, mins);
+}
+
+
 static int get_stats(struct MHD_Connection *connection)
 {
 	JsonNode *json = json_mkobject(), *counters = json_mkobject();
-	char *js;
+	char *js, uptimebuf[BUFSIZ];
 
 	assert(json && counters);
 
@@ -102,8 +115,10 @@ static int get_stats(struct MHD_Connection *connection)
 	json_append_member(counters, "positions",	json_mknumber(st.positions));
 	json_append_member(counters, "events",		json_mknumber(st.events));
 
+	uptime(time(0) - st.launchtime, uptimebuf, sizeof(uptimebuf));
 	json_append_member(json, "stats",	counters);
 	json_append_member(json, "uptime",	json_mknumber(time(0) - st.launchtime));
+	json_append_member(json, "uptime_s",	json_mkstring(uptimebuf));
 	json_append_member(json, "tst",		json_mknumber(time(0)));
 
 	if ((js = json_stringify(json, NULL)) != NULL) {
