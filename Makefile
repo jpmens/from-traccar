@@ -8,13 +8,12 @@ LDFLAGS	= $(MORELIBS) -lm -L. -lmosquitto -lmicrohttpd
 
 ifneq ($(origin STATSDHOST), undefined)
 	CFLAGS += -DSTATSDHOST=\"$(STATSDHOST)\"
-	LDFLAGS += -lstatsdclient
 endif
 
 
 TARGETS=
 FT_OBJS = json.o
-FT_EXTRA_OBJS = 
+FT_EXTRA_OBJS = statsd/statsd-client.o
 
 ifneq ($(FREEBSD),yes)
 else
