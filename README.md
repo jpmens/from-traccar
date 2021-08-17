@@ -30,18 +30,19 @@ fromtraccar.requests.tomqtt:1|c			counter for sent off to MQTT
 
 ### stats
 
-```
-curl http://localhost:8840/stats
+```console
+$ curl http://localhost:8840/stats
 {
   "stats": {
     "_whoami": "ft.c",
-    "_tst": 1537983139,
-    "stats": 5,
-    "requests": 64,
-    "positions": 58,
-    "events": 6
+    "stats": 1322,
+    "requests": 292113,
+    "positions": 280658,
+    "events": 11455
   },
-  "uptime": 1426
+  "uptime": 1187319,
+  "uptime_s": "13 days, 17:48",
+  "tst": 1629206990
 }
 ```
 
