@@ -268,12 +268,12 @@ bool process_data(struct MHD_Connection *connection, void **con_cls)
 	return true;
 }
 
-static int on_client_connect(void *cls, const struct sockaddr *addr, socklen_t addrlen)
+static enum MHD_Result on_client_connect(void *cls, const struct sockaddr *addr, socklen_t addrlen)
 {
 	return MHD_YES;
 }
 
-int print_kv(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+enum MHD_Result print_kv(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
 {
 	fprintf(stderr, "%s: %s\n", key, value);
 	return (MHD_YES);
@@ -284,7 +284,7 @@ static int send_page(struct MHD_Connection *connection, const char *page, int st
 	return send_content(connection, page, "text/plain", status_code);
 }
 
-int handle_connection(void *cls, struct MHD_Connection *connection,
+enum MHD_Result handle_connection(void *cls, struct MHD_Connection *connection,
 	const char *url,
 	const char *method, const char *version,
 	const char *upload_data,
