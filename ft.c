@@ -11,6 +11,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <microhttpd.h>
+# if MHD_VERSION == 0x00093300
+#   define MH_RETVAL int
+# else
+#   define MH_RETVAL enum MHD_Result
+# endif
 #include "utstring.h"
 #include <time.h>
 #include <assert.h>
@@ -268,12 +273,12 @@ bool process_data(struct MHD_Connection *connection, void **con_cls)
 	return true;
 }
 
-static enum MHD_Result on_client_connect(void *cls, const struct sockaddr *addr, socklen_t addrlen)
+static MH_RETVAL on_client_connect(void *cls, const struct sockaddr *addr, socklen_t addrlen)
 {
 	return MHD_YES;
 }
 
-enum MHD_Result print_kv(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+MH_RETVAL print_kv(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
 {
 	fprintf(stderr, "%s: %s\n", key, value);
 	return (MHD_YES);
@@ -284,7 +289,7 @@ static int send_page(struct MHD_Connection *connection, const char *page, int st
 	return send_content(connection, page, "text/plain", status_code);
 }
 
-enum MHD_Result handle_connection(void *cls, struct MHD_Connection *connection,
+MH_RETVAL handle_connection(void *cls, struct MHD_Connection *connection,
 	const char *url,
 	const char *method, const char *version,
 	const char *upload_data,
