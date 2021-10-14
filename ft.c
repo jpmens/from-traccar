@@ -3,6 +3,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <getopt.h>
 #include <string.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
@@ -29,6 +30,8 @@
 
 #define S_PORT 	"8840"
 #define POSTBUFFERSIZE 65535
+
+bool force_close = false;
 
 struct connection_info_struct {
 	UT_string *ds;
@@ -88,6 +91,13 @@ static int send_content(struct MHD_Connection *conn, const char *page,
 				(void*) page, MHD_RESPMEM_MUST_COPY);
 	if (!response)
 		return (MHD_NO);
+
+	if (force_close) {
+		(void) MHD_add_response_header (response,
+				MHD_HTTP_HEADER_CONNECTION,
+				"close");
+	}
+
 	MHD_add_response_header(response, "Content-Type", content_type);
 	ret = MHD_queue_response(conn, status_code, response);
 	MHD_destroy_response(response);
@@ -125,6 +135,7 @@ static int get_stats(struct MHD_Connection *connection)
 	json_append_member(json, "uptime",	json_mknumber(time(0) - st.launchtime));
 	json_append_member(json, "uptime_s",	json_mkstring(uptimebuf));
 	json_append_member(json, "tst",		json_mknumber(time(0)));
+	json_append_member(json, "force_close",	json_mkbool(force_close));
 
 	if ((js = json_stringify(json, NULL)) != NULL) {
 		int ret = send_content(connection, js, "application/json", MHD_HTTP_OK);
@@ -384,8 +395,19 @@ int main(int argc, char **argv)
 	unsigned short port;
 	char *mqtt_hostname, *mqtt_sport;
 	char *ftuser = NULL, *ftpass = NULL;
-	int run = true, rc, mqtt_port = 1883;
+	int run = true, rc, mqtt_port = 1883, c;
 	int loop_timeout = 5000;
+
+	while ((c = getopt(argc, argv, "c")) != EOF) {
+		switch (c) {
+			case 'c':
+				force_close = true;
+				break;
+			default:
+				fprintf(stderr, "Usage: %s [-c]\n", *argv);
+				return (-2);
+		}
+	}
 
 	if ((s_ip = getenv("FT_IP")) == NULL)
 		s_ip = "127.0.0.1";

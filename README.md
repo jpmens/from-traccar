@@ -17,6 +17,8 @@ export FT_MQTT_HOST=127.0.0.1 #default
 export FT_MQTT_PORT=1883 #default
 ```
 
+Invoke with option `-c` to force incoming HTTP connections to close; default is false, i.e. the connection remains open.
+
 ### metrics
 
 ```
@@ -42,7 +44,8 @@ $ curl http://localhost:8840/stats
   },
   "uptime": 1187319,
   "uptime_s": "13 days, 17:48",
-  "tst": 1629206990
+  "tst": 1629206990,
+  "force_close" : false
 }
 ```
 
