@@ -169,8 +169,7 @@ void publish(const char *json_string)
 	st.requests++;
 
 	if ((json = json_decode(json_string)) == NULL) {
-		puts("meh");
-		puts(json_string);
+		syslog(LOG_INFO, "Cannot decode JSON from payload: %s", json_string);
 		statsd_inc(sd, "bad.payloads", SAMPLE_RATE);
 		return;
 	}
