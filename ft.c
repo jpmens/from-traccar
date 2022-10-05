@@ -379,7 +379,7 @@ MH_RETVAL handle_connection(void *cls, struct MHD_Connection *connection,
 
 	process_data(connection, con_cls);
 
-	return (send_page(connection, "", MHD_HTTP_OK));
+	return (send_content(connection, "{}", "application/json", MHD_HTTP_OK));
 }
 
 
