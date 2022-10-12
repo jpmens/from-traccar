@@ -12,7 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <microhttpd.h>
-# if MHD_VERSION == 0x00096200 || MHD_VERSION == 0x00093300
+# if MHD_VERSION == 0x00096200 || MHD_VERSION == 0x00093300 ||  MHD_VERSION == 0x00095900
 #   define MH_RETVAL int
 # else
 #   define MH_RETVAL enum MHD_Result
