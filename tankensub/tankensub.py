@@ -21,11 +21,15 @@ GEO_PREC = 8
 cdb = cdbx.CDB(os.getenv("DATA_FILE"))
 
 __author__    = 'Jan-Piet Mens <jp@mens.de>'
-__copyright__ = 'Copyright 2018 Jan-Piet Mens'
+__copyright__ = 'Copyright 2018-2024 Jan-Piet Mens'
 __license__   = """GNU General Public License"""
 
-def on_connect(mosq, userdata, rc, bla):
-    mqttc.subscribe("_traccar/+/event/ignitionOff", 0)
+def on_connect(mosq, userdata, flags, reason_code, properties):
+    if reason_code.is_failure:
+        print(f"Failed to connect! flags:{flags} reason_code:{reason_code} properties:{properties}. loop_forever() will retry connection")
+    else:
+        print(f"Connected! flags:{flags} reason_code:{reason_code} properties:{properties}")
+        mqttc.subscribe("_traccar/+/event/ignitionOff", 0)
 
 def on_message(mosq, userdata, msg):
     # print("%s (qos=%s, r=%s) %s" % (msg.topic, str(msg.qos), msg.retain, str(msg.payload)))
@@ -85,24 +89,14 @@ def on_message(mosq, userdata, msg):
                 data = json.loads(cdb[neighbor])
                 print(t, "R=%6.1fm" % R, msg.topic, neighbor, json.dumps(data, indent=4))
 
-def on_disconnect(mosq, userdata, rc):
-
-    reasons = {
-       '0' : 'Connection Accepted',
-       '1' : 'Connection Refused: unacceptable protocol version',
-       '2' : 'Connection Refused: identifier rejected',
-       '3' : 'Connection Refused: server unavailable',
-       '4' : 'Connection Refused: bad user name or password',
-       '5' : 'Connection Refused: not authorized',
-    }
-    reason = reasons.get(rc, "code=%s" % rc)
-    print("Disconnected: ", reason)
+def on_disconnect(client, userdata, flags, reason_code, properties):
+    print(f"Disconnected! flags:{flags} reason_code:{reason_code} properties:{properties}")
 
 clientid = 'tankendings-%s' % os.getpid()
 protocol=paho.MQTTv31  # 3
 protocol=paho.MQTTv311 # 4
 
-mqttc = paho.Client(clientid, clean_session=True, userdata=None, protocol=protocol)
+mqttc = paho.Client(paho.CallbackAPIVersion.VERSION2, clientid, clean_session=True, userdata=None, protocol=protocol)
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_disconnect = on_disconnect
