@@ -395,7 +395,7 @@ int main(int argc, char **argv)
 	char *mqtt_hostname, *mqtt_sport;
 	char *ftuser = NULL, *ftpass = NULL;
 	int run = true, rc, mqtt_port = 1883, c;
-	int loop_timeout = 5000;
+	int loop_timeout = 0;
 
 	while ((c = getopt(argc, argv, "c")) != EOF) {
 		switch (c) {
